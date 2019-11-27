@@ -1,0 +1,3 @@
+[submodule "GenderDetector"]
+	path = GenderDetector
+	url = git@github.com:sbehdadk/GenderDetector.git
