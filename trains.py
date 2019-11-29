@@ -48,14 +48,14 @@ def get_args():
 
 def main():
     args = get_args()
-#    input_path = args.input
+    #input_path = args.input
     batch_size = args.batch_size
     nb_epochs = args.nb_epochs
     validation_split = args.validation_split
 
-    input_path = '/home/feras/age-gender-estimator-keras-master/dataset/imdb_crop/imdb.mat'
-#    batch_size = 32
-#    nb_epochs = 70
+    input_path = '/home/Sina/AMS/src/imdb_crop/imdb.mat'
+    #batch_size = 120
+    nb_epochs = 15
 #    validation_split = .2
 
     logging.debug("Loading data...")
@@ -67,7 +67,7 @@ def main():
 
     print("Samples: Training - {}, Validation - {}".format(len(train_keys), len(val_keys)))
     input_shape = (IMG_SIZE, IMG_SIZE, 3)
-    images_path = '/home/feras/age-gender-estimator-keras-master/dataset/imdb_crop/'
+    images_path = '/home/Sina/AMS/src/imdb_crop/'
 
     image_generator = ImageGenerator(ground_truth_data, batch_size,
                                      input_shape[:2],

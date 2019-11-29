@@ -30,15 +30,15 @@ class MobileNetDeepEstimator:
                                     include_top=False, weights=self.weights, input_tensor=None, pooling=None)
 
 
-        model_mobilenet.trainable = False
+        #model_mobilenet.trainable = False
         #model_mobilenet.summary()
         x = model_mobilenet(inputs)
 
         feat_a = GlobalAveragePooling2D()(x)
         feat_a = Dropout(0.5)(feat_a)
-        #feat_a = Dense(self.FC_LAYER_SIZE, activation="relu")(feat_a)
+        feat_a = Dense(self.FC_LAYER_SIZE, activation="relu")(feat_a)
 
-        pred_g_softmax = Dense(2, activation='sigmoid', name='gender')(feat_a)
+        pred_g_softmax = Dense(2, activation='softmax', name='gender')(feat_a)
         #pred_a_softmax = Dense(self.num_neu, activation='softmax', name='age')(feat_a)
 
         model = Model(inputs=inputs, outputs=[pred_g_softmax])

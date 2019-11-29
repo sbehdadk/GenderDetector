@@ -12,7 +12,7 @@ class DataManager(object):
         if self.dataset_path is not None:
             self.dataset_path = dataset_path
         elif self.dataset_name == 'imdb':
-            self.dataset_path = '/home/feras/age-gender-estimator-keras-master/dataset/imdb_crop/imdb.mat'
+            self.dataset_path = '/home/Sina/AMS/src/imdb_crop/imdb.mat'
         else:
             raise Exception('Invalid dataset')
 
