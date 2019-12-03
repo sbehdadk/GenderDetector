@@ -39,7 +39,7 @@ def detect_faces(img):
 
 
 model = MobileNetDeepEstimator(IMG_SIZE, 1, 21, weights=None)()
-model.load_weights(os.path.join("checkpoints", "weights.62-1.97.hdf5"))
+model.load_weights(os.path.join("checkpoints", "weights.01-0.20.hdf5"))
 
 base_path = "test"
 
