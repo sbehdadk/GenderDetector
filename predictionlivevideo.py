@@ -13,8 +13,8 @@ from inference import load_detection_model
 from preprocessor import preprocess_input
 
 # parameters for loading data and images
-detection_model_path = '/home/feras/GenderDetector/haarcascade_frontalface_default.xml'
-gender_model_path = '/home/feras/GenderDetector/checkpoints/weights.01-0.74.hdf5'
+detection_model_path = '/home/Sina/AMS_pretrained/GenderDetector/haarcascade_frontalface_default.xml'
+gender_model_path = '/home/Sina/AMS_pretrained/GenderDetector/checkpoints/weights.07-0.04.hdf5'
 gender_labels = get_labels('imdb')
 font = cv2.FONT_HERSHEY_SIMPLEX
 
