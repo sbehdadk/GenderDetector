@@ -14,7 +14,7 @@ from preprocessor import preprocess_input
 
 # parameters for loading data and images
 detection_model_path = '/home/Sina/AMS_pretrained/GenderDetector/haarcascade_frontalface_default.xml'
-gender_model_path = '/home/Sina/AMS_pretrained/GenderDetector/checkpoints/weights.07-0.04.hdf5'
+gender_model_path = '/home/Sina/AMS_pretrained/GenderDetector/checkpoints/weights.01-0.73.hdf5'
 gender_labels = get_labels('imdb')
 font = cv2.FONT_HERSHEY_SIMPLEX
 
