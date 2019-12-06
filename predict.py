@@ -39,12 +39,12 @@ def detect_faces(img):
 
 
 model = MobileNetDeepEstimator(IMG_SIZE, 1, 21, weights=None)()
-model.load_weights(os.path.join("checkpoints", "weights.62-1.97.hdf5"))
+model.load_weights(os.path.join("checkpoints", "weights.01-0.74.hdf5"))
 
 base_path = "test"
 
 with open('prediction.csv', 'w') as f:
-    f.write('Age, Gender')
+    f.write('Gender')
 
 with open("prediction.csv", "a") as f:
     for _, _, imgs in os.walk(base_path):
@@ -56,11 +56,10 @@ with open("prediction.csv", "a") as f:
 
             results = model.predict(img_data)
             predicted_gender = results[0]
-            ages = np.arange(0, 21).reshape(21, 1)
-            predicted_age = results[1].dot(ages).flatten()
-            res = '{},{}\n'.format(im,
-                                   int(predicted_age[0]*4.76),
-                                   predicted_gender[0])
+            #ages = np.arange(0, 21).reshape(21, 1)
+            #predicted_age = results[1].dot(ages).flatten()
+            res = '{}\n'.format(im,
+                                predicted_gender[0])
             print(res)
-            f.write(res)
+            f.write(res) 
 

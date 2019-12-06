@@ -12,7 +12,7 @@ class DataManager(object):
         if self.dataset_path is not None:
             self.dataset_path = dataset_path
         elif self.dataset_name == 'imdb':
-            self.dataset_path = '/home/Sina/AMS/src/imdb_crop/imdb.mat'
+            self.dataset_path = '/home/feras/GenderDetector/dataset/imdb_crop/imdb.mat'
         else:
             raise Exception('Invalid dataset')
 
@@ -55,6 +55,12 @@ class DataManager(object):
             image_names.append(image_name)
         #return dict(zip(image_names, zip(gender_classes, age_classes)))
         return  dict(zip(image_names,gender_classes)) #convert two lists into a dictionary
+
+def get_labels(dataset_name):
+    if dataset_name == 'imdb':
+        return {0: 'woman', 1: 'man'}
+    else:
+        raise Exception('Invalid dataset name')
 
 #scaling the images and applying transformations to them
 def split_imdb_data(ground_truth_data, validation_split=.2, do_shuffle=False):
