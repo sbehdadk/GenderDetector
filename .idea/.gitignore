@@ -1,3 +1,11 @@
 
 # Default ignored files
 /workspace.xml
+/home/Sina/GenderDetector/models/inceptionV4/weights/inception_v4_weights_tf_dim_ordering_th_kernels.h5
+/home/Sina/GenderDetector/models/inceptionV4/weights/inception_v4_weights_tf_dim_ordering_tf_kernels.h5
+/home/Sina/GenderDetector/models/inceptionV4/weights/inception_v4_weights_th_dim_ordering_tf_kernels.h5
+/home/Sina/GenderDetector/models/inceptionV4/weights/inception_v4_weights_th_dim_ordering_th_kernels.h5
+/home/Sina/GenderDetector/models/inceptionV4/weights/inception_v4.ckpt
+/home/Sina/GenderDetector/models/inceptionV4/weights/inception-v4_weights_tf_dim_ordering_tf_kernels_notop.h5
+/home/Sina/GenderDetector/models/inceptionV4/weights/inception-v4_weights_tf_dim_ordering_tf_kernels.h5
+/home/Sina/GenderDetector/datasets

@@ -4,25 +4,26 @@ import argparse
 import os
 
 
-#def get_args():
-#    parser = argparse.ArgumentParser(description="Plots training curves from history file.")
-#    parser.add_argument("--input", "-i", type=str, required=True,
-#                        help="path to history h5 file")
-#    args = parser.parse_args()
-#    return args
+
+def get_args():
+    parser = argparse.ArgumentParser(description="Plots training curves from history file.")
+    parser.add_argument("--input", "-i", type=str, required=True,
+                        help="path to history h5 file")
+    args = parser.parse_args()
+    return args
 
 
 def main():
-#    args = get_args()
-#    input_path = args.input
-    input_path='/home/feras/GenderDetector/models/history.h5'
+    args = get_args()
+    input_path = args.input
+    input_path='/home/Sina/GenderDetector/models/history.h5'
 
     df = pd.read_hdf(input_path, "history")
     input_dir = os.path.dirname(input_path)
     plt.plot(df["gender_loss"], label="loss (gender)")
     #plt.plot(df["age_loss"], label="loss (age)")
     plt.plot(df["val_gender_loss"], label="val_loss (gender)")
-    p#lt.plot(df["val_age_loss"], label="val_loss (age)")
+    #plt.plot(df["val_age_loss"], label="val_loss (age)")
     plt.xlabel("number of epochs")
     plt.ylabel("loss")
     plt.legend()
