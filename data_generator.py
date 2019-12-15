@@ -154,7 +154,7 @@ class ImageGenerator(object):
             inputs = []
             targets = []
             for key in keys:
-#                image_path = self.path_prefix + key
+                #image_path = self.path_prefix + key
                 image_path = os.path.join(self.path_prefix, key)
                 image_array = imread(image_path)
                 image_array = imresize(image_array, self.image_size)

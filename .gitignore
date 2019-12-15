@@ -1,0 +1,7 @@
+.idea/
+.vscode/
+datasets/
+__pycache__/
+checkpoints/imdb_128_10Epoch_Adam_freezed_Weights.01-1.21.hdf5/
+checkpoints/inceptionv3/wiki_128_10Epoch_Adam_freezed_Weights.01-0.64.hdf5/
+checkpoints/inceptionv3/wiki_128_10Epoch_Adam_freezed_Weights.03-0.63.hdf5/

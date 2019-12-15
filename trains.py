@@ -1,9 +1,13 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
 import argparse
 import matplotlib.pyplot as plt
 import logging
 import os
+import tensorflow as tf
+from tensorflow import keras
 import random
 import string
+from keras import backend as K
 from keras.callbacks import ReduceLROnPlateau
 import pandas as pd
 from keras.callbacks import LearningRateScheduler, ModelCheckpoint, TensorBoard, EarlyStopping
@@ -13,10 +17,10 @@ from keras.optimizers import Adam
 
 from config import FINAL_WEIGHTS_PATH, IMG_SIZE
 from data_generator import ImageGenerator
-from data_loader import DataManager, split_wiki_data
+from data_loader import DataManager, split_imdb_data
 #from models.mobileNet.mobile_net import MobileNetDeepEstimator
 #import models.mobileNet.cnn_all_Model as CNN 
-import models.inceptionV4.inception_v4 as inception
+import models.inceptionV3.inceptionmodel as inception
 from utils import mk_dir
 
 logging.basicConfig(level=logging.DEBUG)
@@ -59,26 +63,26 @@ def main():
     nb_epochs = args.nb_epochs
     validation_split = args.validation_split
 
-    input_path = '/home/Sina/GenderDetector/datasets/wiki_crop/wiki.mat'
+    input_path = 'datasets/imdb_crop/imdb'
     #batch_size = 120
-    patience = 4
+    patience = 6
     nb_epochs = 10
     #validation_split = .2
 
     logging.debug("Loading data...")
 
-    dataset_name = 'wiki'
+    dataset_name = 'imdb'
     data_loader = DataManager(dataset_name, dataset_path=input_path)
     ground_truth_data = data_loader.get_data()
-    train_keys, val_keys = split_wiki_data(ground_truth_data, validation_split)
+    train_keys, validation_keys = split_imdb_data(ground_truth_data, validation_split)
 
-    print("Samples: Training - {}, Validation - {}".format(len(train_keys), len(val_keys)))
+    print("Samples: Training - {}, Validation - {}".format(len(train_keys), len(validation_keys)))
     input_shape = (IMG_SIZE, IMG_SIZE, 3)
-    images_path = '/home/Sina/GenderDetector/datasets/wiki_crop'
+    images_path = 'datasets/imdb_crop'
 
     image_generator = ImageGenerator(ground_truth_data, batch_size,
                                      input_shape[:2],
-                                     train_keys, val_keys,
+                                     train_keys, validation_keys,
                                      path_prefix=images_path,
                                      vertical_flip_probability=0
                                      )
@@ -86,8 +90,9 @@ def main():
     n_age_bins = 21
     alpha = 1
     num_classes = 2
-    
-    model = inception.create_inception_v4()
+
+    # Create the base model from the pre-trained model inception V3
+    model = inception.MobileNetDeepEstimator(input_shape[0], classes=1000, weights='imagenet')()
     #model = MobileNetDeepEstimator(input_shape[0], alpha, n_age_bins, weights='imagenet')()
     #model = CNN.big_XCEPTION(input_shape, num_classes)
     
@@ -95,11 +100,9 @@ def main():
 
     model.compile(
         optimizer=opt,
-        loss=["categorical_crossentropy"],
-        #metrics=['gender': 'accuracy'],
-        metrics=['accuracy'],
-
-    )        
+        loss=["binary_crossentropy"],
+        metrics={'gender':'accuracy'})
+        #metrics=['accuracy'])       
 
     logging.debug("Model summary...")
     model.count_params()
@@ -108,10 +111,10 @@ def main():
 
     logging.debug("Saving model...")
     mk_dir("models")
-    with open(os.path.join("models", "MobileNet.json"), "w") as f:
+    with open(os.path.join("models/inceptionV3", "inceptionv3.json"), "w") as f:
         f.write(model.to_json())
 
-    mk_dir("checkpoints/mobileNet")
+    mk_dir("checkpoints/inceptionV3")
 
     run_id = "MobileNet - " + str(batch_size) + " " + '' \
         .join(random
@@ -123,11 +126,11 @@ def main():
 
     #mode_callback
     early_stop = EarlyStopping('val_loss', patience=patience)
-    reduce_lr = ReduceLROnPlateau(
-        verbose=1, epsilon=0.001, patience=int(patience/2))
+    reduce_lr = ReduceLROnPlateau(verbose=1, epsilon=0.001,
+                                 patience=int(patience/2))
     
     model_checkpoint = ModelCheckpoint(
-            os.path.join('checkpoints/big_XCEPTION', 'wiki_128_10Epoch_Adam_freezed_Weights.{epoch:02d}-{val_loss:.2f}.hdf5'),
+            os.path.join('checkpoints/inceptionv3', 'inceptionv3_imdb_128_10Epoch_Adam.{epoch:02d}-{val_loss:.2f}.hdf5'),
             monitor="val_loss",
             verbose=1,
             save_best_only=True,
@@ -145,37 +148,76 @@ def main():
                                   steps_per_epoch=int(len(train_keys) / batch_size),
                                   epochs=nb_epochs, verbose=1,
                                   callbacks=callbacks,
-                                  validation_data=image_generator.flow('val'),
-                                  validation_steps=int(len(val_keys) / batch_size))
+                                  validation_data=image_generator.flow(mode='val'),
+                                  validation_steps=int(len(validation_keys) / batch_size))
 
 
     logging.debug("Saving weights...")
-    model.save(os.path.join("models", "big_XCEPTION_model.h5"))
+    model.save(os.path.join("models/inceptionV3", "inception_v3.h5"))
     model.save_weights(os.path.join("models", FINAL_WEIGHTS_PATH), overwrite=True)
-    pd.DataFrame(history.history).to_hdf(os.path.join("models", "history.h5"), "history")
+    pd.DataFrame(history.history).to_hdf(os.path.join("models/inceptionV3", "history.h5"), "history")
     
     logging.debug("plot the results...")
-    
-    df = pd.read_hdf(input_path, "history")
-    input_dir = os.path.dirname(input_path)
-    plt.plot(df["gender_loss"], label="loss (gender)")
+    logging.getLogger('matplotlib.font_manager').disabled = True
+
+    hist_path='models/inceptionV3/history.h5'
+    df = pd.read_hdf(hist_path, "history")
+    input_dir = os.path.dirname(hist_path)
+    plt.figure(figsize=(8,8))
+    plt.plot(history.history['loss'], label='train')
+    plt.plot(history.history['val_loss'], label='validation')
+    #plt.plot(df["loss"], label="train_loss")
     #plt.plot(df["age_loss"], label="loss (age)")
-    plt.plot(df["val_gender_loss"], label="val_loss (gender)")
+    #plt.plot(df["val_loss"], label="test_loss")
     #plt.plot(df["val_age_loss"], label="val_loss (age)")
     plt.xlabel("number of epochs")
     plt.ylabel("loss")
     plt.legend()
+    plt.title('loss_function')
     plt.savefig(os.path.join(input_dir, "loss.png"))
-    plt.cla()
+    plt.show()
+    #plt.cla()
 
-    plt.plot(df["gender_acc"], label="accuracy (gender)")
+    plt.figure(figsize=(8,8))
+    plt.plot(history.history['accuracy'], label = 'train')
+    plt.plot(history.history['val_accuracy'], label = 'valid')
+    #plt.plot(df["accuracy"], label="train_acc")
     #plt.plot(df["age_acc"], label="accuracy (age)")
-    plt.plot(df["val_gender_acc"], label="val_accuracy (gender)")
+    #plt.plot(df["val_accuracy"], label="test_acc")
     #plt.plot(df["val_age_acc"], label="val_accuracy (age)")
+    plt.legend()
     plt.xlabel("number of epochs")
     plt.ylabel("accuracy")
-    plt.legend()
+    plt.title('Accuracy')
     plt.savefig(os.path.join(input_dir, "accuracy.png"))
+    plt.show()
     
+    '''
+    acc = history.history['accuracy']
+    val_acc = history.history['val_accuracy']
+
+    loss = history.history['loss']
+    val_loss = history.history['val_loss']
+
+    plt.figure(figsize=(8, 8))
+    plt.subplot(2, 1, 1)
+    plt.plot(acc, label='Training Accuracy')
+    plt.plot(val_acc, label='Validation Accuracy')
+    plt.legend(loc='lower right')
+    plt.ylabel('Accuracy')
+    plt.ylim([min(plt.ylim()),1])
+    plt.title('Training and Validation Accuracy')
+
+    plt.subplot(2, 1, 2)
+    plt.plot(loss, label='Training Loss')
+    plt.plot(val_loss, label='Validation Loss')
+    plt.legend(loc='upper right')
+    plt.ylabel('Cross Entropy')
+    plt.ylim([0,1.0])
+    plt.title('Training and Validation Loss')
+    plt.xlabel('epoch')
+    plt.show() '''
+
+
 if __name__ == '__main__':
     main()

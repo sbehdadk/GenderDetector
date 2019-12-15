@@ -5,32 +5,32 @@ from utils import calc_age
 
 
 class DataManager(object):
-    def __init__(self, dataset_name='wiki', dataset_path=None, image_size=(48, 48)):
+    def __init__(self, dataset_name='imdb', dataset_path=None, image_size=(48, 48)):
         self.dataset_name = dataset_name
         self.dataset_path = dataset_path
         self.image_size = image_size
         if self.dataset_path is not None:
             self.dataset_path = dataset_path
-        elif self.dataset_name == 'wiki':
-            self.dataset_path = '/home/feras/GenderDetector/dataset/wiki_crop/wiki.mat'
+        elif self.dataset_name == 'imdb':
+            self.dataset_path = 'dataset/imdb_crop/imdb.mat'
         else:
             raise Exception('Invalid dataset')
 
     def get_data(self):
-        if self.dataset_name == 'wiki':
-            ground_truth_data = self._load_wiki()
+        if self.dataset_name == 'imdb':
+            ground_truth_data = self._load_imdb()
         return ground_truth_data
 #cleaning uo noisy labels
-    def _load_wiki(self):
+    def _load_imdb(self):
         face_score_treshold = 3
         dataset = loadmat(self.dataset_path)
-        image_names_array = dataset['wiki']['full_path'][0, 0][0]
-        gender_classes = dataset['wiki']['gender'][0, 0][0]
+        image_names_array = dataset['imdb']['full_path'][0, 0][0]
+        gender_classes = dataset['imdb']['gender'][0, 0][0]
 
-        face_score = dataset['wiki']['face_score'][0, 0][0]
-        second_face_score = dataset['wiki']['second_face_score'][0, 0][0]
-        #dob = dataset['wiki']['dob'][0, 0][0]
-        #photo_taken = dataset['wiki']['photo_taken'][0, 0][0]
+        face_score = dataset['imdb']['face_score'][0, 0][0]
+        second_face_score = dataset['imdb']['second_face_score'][0, 0][0]
+        #dob = dataset['imdb']['dob'][0, 0][0]
+        #photo_taken = dataset['imdb']['photo_taken'][0, 0][0]
 # filtering nun numeric values
         face_score_mask = face_score > face_score_treshold
         second_face_score_mask = np.isnan(second_face_score)
@@ -57,13 +57,13 @@ class DataManager(object):
         return  dict(zip(image_names,gender_classes)) #convert two lists into a dictionary
 
 def get_labels(dataset_name):
-    if dataset_name == 'wiki':
+    if dataset_name == 'imdb':
         return {0: 'woman', 1: 'man'}
     else:
         raise Exception('Invalid dataset name')
 
 #scaling the images and applying transformations to them
-def split_wiki_data(ground_truth_data, validation_split=.2, do_shuffle=False):
+def split_imdb_data(ground_truth_data, validation_split=.2, do_shuffle=False):
     ground_truth_keys = sorted(ground_truth_data.keys())
     if do_shuffle:
         shuffle(ground_truth_keys)
@@ -76,11 +76,11 @@ def split_wiki_data(ground_truth_data, validation_split=.2, do_shuffle=False):
 
 
 #validation_split = .2
-#input_path = '/home/feras/age-gender-estimator-keras-master/dataset/wiki_crop/wiki.mat'
-#dataset_name = 'wiki'
+#input_path = '/home/feras/age-gender-estimator-keras-master/dataset/imdb_crop/imdb.mat'
+#dataset_name = 'imdb'
 #data_loader = DataManager(dataset_name, dataset_path=input_path)
 #ground_truth_data = data_loader.get_data()
-#train_keys, val_keys = split_wiki_data(ground_truth_data, validation_split)
+#train_keys, val_keys = split_imdb_data(ground_truth_data, validation_split)
 #print('Number of training samples:', len(train_keys))
 #print('Number of validation samples:', len(val_keys))
 

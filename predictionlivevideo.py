@@ -13,9 +13,9 @@ from inference import load_detection_model
 from preprocessor import preprocess_input
 
 # parameters for loading data and images
-detection_model_path = '/home/Sina/GenderDetector/haarcascade_frontalface_default.xml'
-gender_model_path = '/home/Sina/GenderDetector/checkpoints/weights.01-0.73.hdf5'
-gender_labels = get_labels('wiki')
+detection_model_path = 'haarcascade_frontalface_default.xml'
+gender_model_path = 'checkpoints/weights.01-0.73.hdf5'
+gender_labels = get_labels('imdb')
 font = cv2.FONT_HERSHEY_SIMPLEX
 
 # hyper-parameters for bounding boxes shape
