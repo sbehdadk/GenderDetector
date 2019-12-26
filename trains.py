@@ -12,14 +12,16 @@ from keras.callbacks import ReduceLROnPlateau
 import pandas as pd
 from keras.callbacks import LearningRateScheduler, ModelCheckpoint, TensorBoard, EarlyStopping
 #from keras.optimizers import RMSprop
-from keras.optimizers import Adam
-#from keras.optimizers import SGD
+#from keras.optimizers import Adam
+from keras.optimizers import SGD
 
 from config import FINAL_WEIGHTS_PATH, IMG_SIZE
 from data_generator import ImageGenerator
 from data_loader import DataManager, split_imdb_data
 #from models.mobileNet.mobile_net import MobileNetDeepEstimator
 #import models.mobileNet.cnn_all_Model as CNN 
+import models.fine_tuning.inception_v3_finetune as inception_tuning
+import models.vgg16.vgg16 as vgg16
 import models.inceptionV3.inceptionmodel as inception
 from utils import mk_dir
 
@@ -47,11 +49,12 @@ def get_args():
                         help="path to history h5 file")'''
     parser.add_argument("--batch_size", type=int, default=128,
                         help="batch size")
-    parser.add_argument("--nb_epochs", type=int, default=70,
+    parser.add_argument("--nb_epochs", type=int, default=20,
                         help="number of epochs")
     parser.add_argument("--validation_split", type=float, default=0.2,
                         help="validation split ratio")
-
+    parser.add_argument("--patience", type=int, default=6,
+                        help="patience_epochs")
     args = parser.parse_args()
     return args
 
@@ -64,11 +67,6 @@ def main():
     validation_split = args.validation_split
 
     input_path = 'datasets/imdb_crop/imdb'
-    #batch_size = 120
-    patience = 6
-    nb_epochs = 10
-    #validation_split = .2
-
     logging.debug("Loading data...")
 
     dataset_name = 'imdb'
@@ -90,12 +88,17 @@ def main():
     n_age_bins = 21
     alpha = 1
     num_classes = 2
-
+    #weights_path = 'models/fine_tuing/top_model_weights.h5'
     # Create the base model from the pre-trained model inception V3
-    model = inception.MobileNetDeepEstimator(input_shape[0], classes=1000, weights='imagenet')()
+    #model = inception.MobileNetDeepEstimator(input_shape[0], classes=1000, weights='imagenet')()
     #model = MobileNetDeepEstimator(input_shape[0], alpha, n_age_bins, weights='imagenet')()
     #model = CNN.big_XCEPTION(input_shape, num_classes)
-    
+    model,history_imdb = vgg16.MobileNetDeepEstimator(input_shape[0],
+                                                      classes=1000, weights='imagenet')()
+    '''
+    model.load_weights(top_weights_path)
+    print ("Checkpoint '" + top_weights_path + "' loaded.")
+
     opt = Adam(lr=0.001)
 
     model.compile(
@@ -103,69 +106,22 @@ def main():
         loss=["binary_crossentropy"],
         metrics={'gender':'accuracy'})
         #metrics=['accuracy'])       
-
-    logging.debug("Model summary...")
-    model.count_params()
-    model.summary()
-
-
-    logging.debug("Saving model...")
-    mk_dir("models")
-    with open(os.path.join("models/inceptionV3", "inceptionv3.json"), "w") as f:
-        f.write(model.to_json())
-
-    mk_dir("checkpoints/inceptionV3")
-
-    run_id = "MobileNet - " + str(batch_size) + " " + '' \
-        .join(random
-              .SystemRandom()
-              .choice(string.ascii_uppercase) for _ in
-              range(10)
-              )
-    print(run_id)
-
-    #mode_callback
-    early_stop = EarlyStopping('val_loss', patience=patience)
-    reduce_lr = ReduceLROnPlateau(verbose=1, epsilon=0.001,
-                                 patience=int(patience/2))
-    
-    model_checkpoint = ModelCheckpoint(
-            os.path.join('checkpoints/inceptionv3', 'inceptionv3_imdb_128_10Epoch_Adam.{epoch:02d}-{val_loss:.2f}.hdf5'),
-            monitor="val_loss",
-            verbose=1,
-            save_best_only=True,
-            mode="auto",
-            save_weights_only=False)
-    callbacks = [
-        LearningRateScheduler(schedule=Schedule(nb_epochs)),
-        reduce_lr, model_checkpoint, early_stop,
-        TensorBoard(log_dir='logs/' + run_id)
-    ]
-
-    logging.debug("Running training...")
-
-    history = model.fit_generator(image_generator.flow(mode='train'),
-                                  steps_per_epoch=int(len(train_keys) / batch_size),
-                                  epochs=nb_epochs, verbose=1,
-                                  callbacks=callbacks,
-                                  validation_data=image_generator.flow(mode='val'),
-                                  validation_steps=int(len(validation_keys) / batch_size))
-
+    '''
 
     logging.debug("Saving weights...")
-    model.save(os.path.join("models/inceptionV3", "inception_v3.h5"))
+    model.save(os.path.join("models/vgg16", "vgg16.h5"))
     model.save_weights(os.path.join("models", FINAL_WEIGHTS_PATH), overwrite=True)
-    pd.DataFrame(history.history).to_hdf(os.path.join("models/inceptionV3", "history.h5"), "history")
+    pd.DataFrame(history_imdb.history).to_hdf(os.path.join("models/vgg16", "history.h5"), "history")
     
     logging.debug("plot the results...")
     logging.getLogger('matplotlib.font_manager').disabled = True
 
-    hist_path='models/inceptionV3/history.h5'
+    hist_path='models/vgg16/history.h5'
     df = pd.read_hdf(hist_path, "history")
     input_dir = os.path.dirname(hist_path)
     plt.figure(figsize=(8,8))
-    plt.plot(history.history['loss'], label='train')
-    plt.plot(history.history['val_loss'], label='validation')
+    plt.plot(history_imdb.history['loss'], label='train')
+    plt.plot(history_imdb.history['val_loss'], label='validation')
     #plt.plot(df["loss"], label="train_loss")
     #plt.plot(df["age_loss"], label="loss (age)")
     #plt.plot(df["val_loss"], label="test_loss")
@@ -179,8 +135,8 @@ def main():
     #plt.cla()
 
     plt.figure(figsize=(8,8))
-    plt.plot(history.history['accuracy'], label = 'train')
-    plt.plot(history.history['val_accuracy'], label = 'valid')
+    plt.plot(history_imdb.history['accuracy'], label = 'train')
+    plt.plot(history_imdb.history['val_accuracy'], label = 'valid')
     #plt.plot(df["accuracy"], label="train_acc")
     #plt.plot(df["age_acc"], label="accuracy (age)")
     #plt.plot(df["val_accuracy"], label="test_acc")
