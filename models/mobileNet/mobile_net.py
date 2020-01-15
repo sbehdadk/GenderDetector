@@ -3,7 +3,7 @@ import tensorflow as tf
 from tensorflow import keras
 from keras import backend as K
 from keras import Input, Model
-from keras.applications import MobileNet, InceptionResNetV2
+from keras.applications import MobileNet, InceptionResNetV2, vgg16
 from keras.layers import Dropout, Dense, GlobalAveragePooling2D
 
 
@@ -30,10 +30,12 @@ class MobileNetDeepEstimator:
         #model_mobilenet = MobileNet(input_shape=self._input_shape, alpha=self.alpha, depth_multiplier=1, dropout=1e-3,
                                     #include_top=False, weights=self.weights, input_tensor=None, pooling=None)
         
-        model_mobilenet = InceptionResNetV2(input_shape=self._input_shape, alpha=self.alpha, depth_multiplier=1, dropout=1e-3,
-                                             include_top=False, weights=self.weights, input_tensor=None, pooling=None)
+        model_mobilenet = vgg16.VGG16(include_top=False,
+                                        weights='imagenet',
+                                        input_shape=self._input_shape,
+                                        classes=1000)
 
-        model_mobilenet.trainable = False      
+        #model_mobilenet.trainable = False      
         #model_mobilenet.summary()
         x = model_mobilenet(inputs)
 

@@ -5,10 +5,11 @@ import random
 import string
 from utils import mk_dir
 import tensorflow as tf
+from data_loader import DataManager, split_imdb_data
 from tensorflow import keras
 from keras import backend as K
 from keras import Input, Model
-from keras.applications import MobileNet, InceptionResNetV2, inception_v3, vgg16
+from keras.applications import MobileNet, InceptionResNetV2, inception_v3, vgg16, mobilenet_v2
 from keras.layers import Dropout, Dense, GlobalAveragePooling2D
 from data_loader_wiki import DataManager_wiki, split_wiki_data
 from config import FINAL_WEIGHTS_PATH, IMG_SIZE
@@ -115,7 +116,7 @@ class MobileNetDeepEstimator:
         #base_model = inception_v3.InceptionV3(include_top=False, weights='imagenet', input_tensor=None,
         #                                            input_shape=self._input_shape, pooling=None, classes=1000)
 
-        base_model = inception_v3.InceptionV3(input_shape=self._input_shape,
+        base_model = mobilenet_v2.MobileNetv2(input_shape=self._input_shape,
                                               weights='imagenet', include_top=False)
         
         base_model.trainable = False
