@@ -47,7 +47,7 @@ class MobileNetDeepEstimator:
             self._input_shape = (image_size, image_size, 3)
         #self.alpha = alpha
         #self.num_neu = num_neu
-        self.nb_epochs = 3
+        self.nb_epochs = 50
         self.patience = 6
         self.model_path = 'models/fine_tuning'
         self.batch_size = 32
@@ -106,6 +106,7 @@ class MobileNetDeepEstimator:
     def __call__(self):
         logging.debug("Creating model...")
         #s = self.reset_tf_session1()
+        nb_epochs=self.nb_epochs
         inputs = Input(shape=self._input_shape, name='input_1')
         #base_model = MobileNet(input_shape=self._input_shape, alpha=self.alpha, depth_multiplier=1, dropout=1e-3,
                                     #include_top=False, weights=self.weights, input_tensor=None, pooling=None)
@@ -140,7 +141,7 @@ class MobileNetDeepEstimator:
             layer.trainable = False
         # compile the model (should be done *after* setting layers to non-trainable)
         
-        image_generator, train_keys, val_keys = self.__preprocessing__wiki()
+        image_generator, train_keys, val_keys = self.__preprocessing__imdb()
         
         model.compile(optimizer=RMSprop(lr=self.learning_rate),
                       loss='binary_crossentropy', metrics=['accuracy'])
@@ -159,7 +160,7 @@ class MobileNetDeepEstimator:
         
         history_imdb1 = model.fit_generator(image_generator.flow(mode='train'),
                                       steps_per_epoch=int(len(train_keys) / self.batch_size),
-                                      epochs=self.nb_epochs, verbose=1,
+                                      epochs=nb_epochs/10, verbose=1,
                                       callbacks=callbacks_list,
                                       validation_data=image_generator.flow(mode='val'),
                                       validation_steps=int(len(val_keys) / self.batch_size))
@@ -193,8 +194,7 @@ class MobileNetDeepEstimator:
         early_stop = EarlyStopping('val_loss', patience=self.patience)
         reduce_lr = ReduceLROnPlateau(verbose=1, epsilon=0.001,
                                      patience=int(self.patience/2))
-        
-        
+                
         logging.debug("Saving model...")
         mk_dir("models")
         with open(os.path.join("models/fine_tuning", "mobileNet.json"), "w") as f:
@@ -217,7 +217,7 @@ class MobileNetDeepEstimator:
                     mode="auto",
                     save_weights_only=False)
         callbacks = [
-            LearningRateScheduler(schedule=Schedule(self.nb_epochs)),
+            LearningRateScheduler(schedule=Schedule(nb_epochs)),
             reduce_lr, model_checkpoint, early_stop,
             TensorBoard(log_dir='logs/' + run_id)
         ]
@@ -226,7 +226,7 @@ class MobileNetDeepEstimator:
     
         history_imdb = model.fit_generator(image_generator_imdb.flow(mode='train'),
                                       steps_per_epoch=int(len(train_keys_imdb) / self.batch_size),
-                                      epochs=self.nb_epochs+45, verbose=1,
+                                      epochs=nb_epochs, verbose=1,
                                       callbacks=callbacks,
                                       validation_data=image_generator_imdb.flow(mode='val'),
                                       validation_steps=int(len(val_keys_imdb) / self.batch_size))

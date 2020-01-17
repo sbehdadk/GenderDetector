@@ -19,7 +19,8 @@ from data_generator import ImageGenerator
 from data_loader import DataManager, split_imdb_data
 #from models.mobileNet.mobile_net import MobileNetDeepEstimator
 #import models.big_exception.cnn_all_Model as CNN 
-from models.fine_tuning.mobile_net import MobileNetDeepEstimator
+#from models.fine_tuning.mobile_net import MobileNetDeepEstimator
+from models.transfer_learning.inception_v3 import MobileNetDeepEstimator
 #import models.fine_tuning.inception_v3_finetune as inception_tuning
 #import models.vgg16.vgg16_full as vgg16
 #import models.inceptionV3.inceptionmodel as inception
@@ -84,25 +85,80 @@ def main():
                                      path_prefix=images_path,
                                      vertical_flip_probability=0
                                      )
-    
     n_age_bins = 21
     alpha = 1
-    num_classes = 2
+    model = MobileNetDeepEstimator(input_shape[0], alpha, n_age_bins, weights='imagenet')()
     #weights_path = 'models/fine_tuing/top_model_weights.h5'
     #Create the base model from the pre-trained model inception V3
     #model = inception.MobileNetDeepEstimator(input_shape[0], classes=1000, weights='imagenet')()
     #model = MobileNetDeepEstimator(input_shape[0], alpha, n_age_bins, weights='imagenet')()
     #model = vgg16.MobileNetDeepEstimator(IMG_SIZE, classes=2)()
-    model, history = MobileNetDeepEstimator(input_shape[0], weights='imagenet')()
+    #model, history = MobileNetDeepEstimator(input_shape[0], weights='imagenet')()
+
+
+    opt = SGD(lr=0.0001, momentum=0.9)
+
+    model.compile(
+        optimizer=opt,
+        loss=["binary_crossentropy"],
+        metrics=['accuracy'],
+    )
+
+    logging.debug("Model summary...")
+    model.count_params()
+    model.summary()
+
+    logging.debug("Saving model...")
+    mk_dir("models")
+    with open(os.path.join("models/transfer_learning", "MobileNet.json"), "w") as f:
+        f.write(model.to_json())
+
+    mk_dir("checkpoints")
+
+    run_id = "MobileNet - " + str(batch_size) + " " + '' \
+        .join(random
+              .SystemRandom()
+              .choice(string.ascii_uppercase) for _ in
+              range(10)
+              )
+    print(run_id)
+
+    reduce_lr = ReduceLROnPlateau(
+        verbose=1, epsilon=0.001, patience=4)
+
+    callbacks = [
+        LearningRateScheduler(schedule=Schedule(nb_epochs)),
+        reduce_lr,
+        ModelCheckpoint(
+            os.path.join('checkpoints/transfer_learning', 'weights.{epoch:02d}-{val_loss:.2f}.hdf5'),
+            monitor="val_loss",
+            verbose=1,
+            save_best_only=True,
+            mode="auto"
+        ),
+        TensorBoard(log_dir='logs/' + run_id)
+    ]
+
+    logging.debug("Running training...")
+
+    history = model.fit_generator(
+                                image_generator.flow(mode='train'),
+                                steps_per_epoch=int(len(train_keys) / batch_size),
+                                epochs=nb_epochs,
+                                callbacks=callbacks,
+                                validation_data=image_generator.flow('val'),
+                                validation_steps=int(len(validation_keys) / batch_size)
+    )
+
 
     logging.debug("Saving weights...")
-    model.save(os.path.join("models/fine_tuning", "mobileNet_model.h5"))
-    model.save_weights(os.path.join("models/fine_tuning", FINAL_WEIGHTS_PATH), overwrite=True)
-    pd.DataFrame(history.history).to_hdf(os.path.join("models/fine_tuning", "history.h5"), "history")
+    model.save(os.path.join("models/transfer_learning", "mobileNet_model.h5"))
+    model.save_weights(os.path.join("models/transfer_learning", FINAL_WEIGHTS_PATH), overwrite=True)
+    pd.DataFrame(history.history).to_hdf(os.path.join("models/transfer_learning", "history.h5"), "history")
    
     logging.debug("plot the results...")
     logging.getLogger('matplotlib.font_manager').disabled = True
-    hist_path='models/fine_tuning/history.h5'
+    hist_path='models/transfer_learning/history.h5'
     df = pd.read_hdf(hist_path, "history")
     input_dir = os.path.dirname(hist_path)
     plt.figure(figsize=(8,8))
