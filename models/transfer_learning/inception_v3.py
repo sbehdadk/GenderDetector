@@ -47,7 +47,7 @@ class MobileNetDeepEstimator:
         #x = base_model.output
         feat_a = GlobalAveragePooling2D()(x)
         feat_a = Dropout(0.5)(feat_a)
-        feat_a = Dense(self.FC_LAYER_SIZE, activation="relu")(feat_a)
+        #feat_a = Dense(self.FC_LAYER_SIZE, activation="relu")(feat_a)
 
         prediction = Dense(2, activation='softmax', name='gender')(feat_a)
         
