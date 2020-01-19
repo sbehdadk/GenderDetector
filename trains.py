@@ -50,11 +50,11 @@ def get_args():
                         help="path to history h5 file")'''
     parser.add_argument("--batch_size", type=int, default=32,
                         help="batch size")
-    parser.add_argument("--nb_epochs", type=int, default=50,
+    parser.add_argument("--nb_epochs", type=int, default=10,
                         help="number of epochs")
     parser.add_argument("--validation_split", type=float, default=0.2,
                         help="validation split ratio")
-    parser.add_argument("--patience", type=int, default=20,
+    parser.add_argument("--patience", type=int, default=6,
                         help="patience_epochs")
     args = parser.parse_args()
     return args
@@ -125,12 +125,12 @@ def main():
 
     reduce_lr = ReduceLROnPlateau(
         verbose=1, epsilon=0.001, patience=4)
-
+    early_stopping = EarlyStopping(monitor='val_loss', patience=5)
     callbacks = [
         LearningRateScheduler(schedule=Schedule(nb_epochs)),
-        reduce_lr,
+        reduce_lr, early_stopping,
         ModelCheckpoint(
-            os.path.join('checkpoints/transfer_learning', 'weights.{epoch:02d}-{val_loss:.2f}.hdf5'),
+            os.path.join('checkpoints/transfer_learning', 'MobileNetV2-weights.{epoch:02d}-{val_loss:.2f}.hdf5'),
             monitor="val_loss",
             verbose=1,
             save_best_only=True,
