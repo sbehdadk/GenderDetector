@@ -11,9 +11,6 @@ import cv2
 
 
 class ImageGenerator(object):
-    """ Image generator with saturation, brightness, lighting, contrast,
-    horizontal flip and vertical flip transformations.
-    """
 
     def __init__(self, ground_truth_data, batch_size, image_size,
                  train_keys, validation_keys,
@@ -154,7 +151,6 @@ class ImageGenerator(object):
             inputs = []
             targets = []
             for key in keys:
-                #image_path = self.path_prefix + key
                 image_path = os.path.join(self.path_prefix, key)
                 image_array = imread(image_path)
                 image_array = imresize(image_array, self.image_size)
@@ -181,18 +177,11 @@ class ImageGenerator(object):
                     targets = np.asarray(targets)
 
                     gender = np_utils.to_categorical(targets)
-                    # Quantizing the age
-
-                    #age_bins = np.linspace(0, 100, 21)
-                    #age_step = np.digitize(targets[:, 1], age_bins)
-                    #age_quantized = np_utils.to_categorical(age_step, 21)
 
                     if mode == 'train' or mode == 'val':
                         inputs = self.preprocess_images(inputs)
-                        #yield self._wrap_in_dictionary(inputs, gender, age_quantized)
                         yield self._wrap_in_dictionary(inputs, gender)
                     if mode == 'demo':
-                        #yield self._wrap_in_dictionary(inputs, gender, age_quantized)
                         yield self._wrap_in_dictionary(inputs, gender)
                     inputs = []
                     targets = []
@@ -200,6 +189,5 @@ class ImageGenerator(object):
     def _wrap_in_dictionary(self, image_array, gender):
         return [
             {'input_1': image_array},
-            #{'gender': gender, 'age': age_quantized}
             {'gender': gender}
         ]

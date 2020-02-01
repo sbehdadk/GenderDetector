@@ -28,10 +28,12 @@ from utils import mk_dir
 
 logging.basicConfig(level=logging.DEBUG)
 
+
+
 class Schedule:
     def __init__(self, nb_epochs):
         self.epochs = nb_epochs
-
+#schedule the learning rate regarding to number of epochs
     def __call__(self, epoch_idx):
         if epoch_idx < self.epochs * 0.10:
             return 0.001
@@ -42,12 +44,10 @@ class Schedule:
         return 0.00008
 
 
-
+#define the arguments
 def get_args():
     parser = argparse.ArgumentParser(description="This script trains the CNN model for age and gender estimation.",
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    '''parser.add_argument("--input", "-i", type=str, required=True,
-                        help="path to history h5 file")'''
     parser.add_argument("--batch_size", type=int, default=32,
                         help="batch size")
     parser.add_argument("--nb_epochs", type=int, default=10,
@@ -61,41 +61,49 @@ def get_args():
 
 
 def main():
+    #define some needed parameters localy
     args = get_args()
     #input_path = args.input
     batch_size = args.batch_size
     nb_epochs = args.nb_epochs
     validation_split = args.validation_split
     patience = args.patience
+    n_age_bins = 21
+    alpha = 1
+
+    #where the datasets get loaded
     input_path = 'datasets/imdb_crop/imdb'
     logging.debug("Loading data...")
-
     dataset_name = 'imdb'
+
+    #loading & spliting up & some pre-processing on dataset 
     data_loader = DataManager(dataset_name, dataset_path=input_path)
     ground_truth_data = data_loader.get_data()
     train_keys, validation_keys = split_imdb_data(ground_truth_data, validation_split)
-
     print("Samples: Training - {}, Validation - {}".format(len(train_keys), len(validation_keys)))
+
+    #define the input shape
     input_shape = (IMG_SIZE, IMG_SIZE, 3)
     images_path = 'datasets/imdb_crop'
 
+    #Image generator with saturation, brightness, lighting, contrast,
+                                #horizontal flip and vertical flip transformations.
     image_generator = ImageGenerator(ground_truth_data, batch_size,
                                      input_shape[:2],
                                      train_keys, validation_keys,
                                      path_prefix=images_path,
                                      vertical_flip_probability=0
                                      )
-    n_age_bins = 21
-    alpha = 1
+    
+    #call the model
     model = MobileNetDeepEstimator(input_shape[0], alpha, n_age_bins, weights='imagenet')()
-    #weights_path = 'models/fine_tuing/top_model_weights.h5'
-    #Create the base model from the pre-trained model inception V3
+
     #model = inception.MobileNetDeepEstimator(input_shape[0], classes=1000, weights='imagenet')()
     #model = MobileNetDeepEstimator(input_shape[0], alpha, n_age_bins, weights='imagenet')()
     #model = vgg16.MobileNetDeepEstimator(IMG_SIZE, classes=2)()
     #model, history = MobileNetDeepEstimator(input_shape[0], weights='imagenet')()
 
-
+    #compiler the model using SGD optimizer
     opt = SGD(lr=0.0001, momentum=0.9)
 
     model.compile(
@@ -104,6 +112,7 @@ def main():
         metrics=['accuracy'],
     )
 
+    #set the dependencies to save model and weights
     logging.debug("Model summary...")
     model.count_params()
     model.summary()
@@ -123,6 +132,8 @@ def main():
               )
     print(run_id)
 
+
+    #make callback consists of reducing learning rate, early stoping, modelcheckpoints
     reduce_lr = ReduceLROnPlateau(
         verbose=1, epsilon=0.001, patience=4)
     early_stopping = EarlyStopping(monitor='val_loss', patience=5)
@@ -141,6 +152,8 @@ def main():
 
     logging.debug("Running training...")
 
+
+    #call fit_generator to fit the model using batch method
     history = model.fit_generator(
                                 image_generator.flow(mode='train'),
                                 steps_per_epoch=int(len(train_keys) / batch_size),
@@ -151,11 +164,13 @@ def main():
     )
 
 
+    #save the final model , weights, history
     logging.debug("Saving weights...")
     model.save(os.path.join("models/transfer_learning", "mobileNet_model.h5"))
     model.save_weights(os.path.join("models/transfer_learning", FINAL_WEIGHTS_PATH), overwrite=True)
     pd.DataFrame(history.history).to_hdf(os.path.join("models/transfer_learning", "history.h5"), "history")
-   
+
+    #visulizing using plots
     logging.debug("plot the results...")
     logging.getLogger('matplotlib.font_manager').disabled = True
     hist_path='models/transfer_learning/history.h5'
@@ -189,33 +204,6 @@ def main():
     plt.title('Accuracy')
     plt.savefig(os.path.join(input_dir, "accuracy.png"))
     plt.show()
-    
-    '''
-    acc = history.history['accuracy']
-    val_acc = history.history['val_accuracy']
-
-    loss = history.history['loss']
-    val_loss = history.history['val_loss']
-
-    plt.figure(figsize=(8, 8))
-    plt.subplot(2, 1, 1)
-    plt.plot(acc, label='Training Accuracy')
-    plt.plot(val_acc, label='Validation Accuracy')
-    plt.legend(loc='lower right')
-    plt.ylabel('Accuracy')
-    plt.ylim([min(plt.ylim()),1])
-    plt.title('Training and Validation Accuracy')
-
-    plt.subplot(2, 1, 2)
-    plt.plot(loss, label='Training Loss')
-    plt.plot(val_loss, label='Validation Loss')
-    plt.legend(loc='upper right')
-    plt.ylabel('Cross Entropy')
-    plt.ylim([0,1.0])
-    plt.title('Training and Validation Loss')
-    plt.xlabel('epoch')
-    plt.show() '''
-
 
 if __name__ == '__main__':
     main()
