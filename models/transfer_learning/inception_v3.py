@@ -54,13 +54,13 @@ class MobileNetDeepEstimator:
         #set backend learning phase on True
         K.set_learning_phase(1)
 
-        #x = base_model(inputs)
-        x = base_model.output
+        x = base_model(inputs)
+        #x = base_model.output
         feat = GlobalAveragePooling2D()(x)
         feat = Dropout(0.5)(feat)
         prediction = Dense(2, activation='softmax', name='gender')(feat)
         
-        model = Model(inputs=base_model.input, outputs=prediction)
+        model = Model(inputs=inputs, outputs=prediction)
         
         
         model.summary()
