@@ -50,7 +50,7 @@ def get_args():
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("--batch_size", type=int, default=32,
                         help="batch size")
-    parser.add_argument("--nb_epochs", type=int, default=10,
+    parser.add_argument("--nb_epochs", type=int, default=50,
                         help="number of epochs")
     parser.add_argument("--validation_split", type=float, default=0.2,
                         help="validation split ratio")
