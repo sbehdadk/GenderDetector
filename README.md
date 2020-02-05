@@ -6,7 +6,7 @@ We provided the both models (the one with the keras frozen layers and the soluti
 
 As you can see in the structure we’ve divided the project into this parts :
 
-Loading the data using data_loader.py class
+Loading the data using data_loader.py class\
 Preprocessing and augmenting and normalizing the data using inference.py and preprocessor.py
 Generating the data using generator.py class
 Prepare some dependencies using download.sh and utils
