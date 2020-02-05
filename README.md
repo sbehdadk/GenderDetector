@@ -1,5 +1,5 @@
 # GenderDetector
-This Project was an Semester Project in manner to the Lecture "Special Aspects of mobile Autonomous Sysytems", where this idea can help the Robots to cummunicate better with people. Whtat did made better is that the whole training process got faster than using normal transfer learning method. Because we found the fine tuning much better to use the high value features plus reduce the time and trainable parameters.
+This Project was an Semester Project in the order to the Lecture "Special Aspects of mobile Autonomous Sysytems", where this idea can help the Robots to cummunicate better with people. Whtat did made better is that the whole training process got faster than using normal transfer learning method. Because we found the fine tuning much better to use the high value features plus reduce the time and trainable parameters.
 
 ## Run the code :
 We provided the both models (the one with the keras frozen layers and the solution) , you can as it’s going to be explained just comment one of the model and train this with : python trains.py
